@@ -1,12 +1,13 @@
+from flask_cors import CORS
 from flask import Flask, jsonify
 import requests
 
 app = Flask(__name__)
-
+CORS(app)
 @app.route('/fetch-data')
 def fetch_data():
 
-    api_url = 'https://api.thingspeak.com/channels/9/feeds.json?results=10'
+    api_url = 'https://api.thingspeak.com/channels/9/feeds.json?'
 
     try:
         response = requests.get(api_url)

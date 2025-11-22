@@ -1,0 +1,84 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThingSpeak Data Viewer</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        #chart_div { width: 100%; height: 400px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <h1>ThingSpeak Latest Feeds</h1>
+    <button id="loadData">Load Data</button>
+    <div id="chart_div"></div>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Entry ID</th>
+                <th>Created At</th>
+                <th>Field 1</th>
+                <th>Field 2</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        google.charts.load('current', {packages: ['corechart']});
+
+        async function loadData() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/fetch-data');
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.json();
+
+                const tableBody = document.querySelector('#dataTable tbody');
+                tableBody.innerHTML = '';
+                data.feeds.forEach(feed => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${feed.entry_id}</td>
+                        <td>${feed.created_at}</td>
+                        <td>${feed.field1 || ''}</td>
+                        <td>${feed.field2 || ''}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                const chartData = [['Time', 'Field 1', 'Field 2']];
+                data.feeds.forEach(feed => {
+                    const time = new Date(feed.created_at);
+                    const field1 = feed.field1 ? parseFloat(feed.field1) : 0;
+                    const field2 = feed.field2 ? parseFloat(feed.field2) : 0;
+                    chartData.push([time, field1, field2]);
+                });
+
+                const dataTable = google.visualization.arrayToDataTable(chartData);
+                const options = {
+                    title: 'ThingSpeak Latest Feeds',
+                    curveType: 'function',
+                    legend: { position: 'bottom' },
+                    hAxis: { title: 'Time', format: 'HH:mm:ss' },
+                    vAxis: { title: 'Values' },
+                };
+                const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+                chart.draw(dataTable, options);
+
+            } catch (error) {
+                alert('Error fetching data: ' + error.message);
+            }
+        }
+
+        document.getElementById('loadData').addEventListener('click', () => {
+            google.charts.setOnLoadCallback(loadData);
+        });
+    </script>
+</body>
+</html>
