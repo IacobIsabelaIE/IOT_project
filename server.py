@@ -54,8 +54,10 @@ except Exception as e:
 # Flask Routes
 @app.route('/fetch-data')
 def fetch_data():
-    api_url = 'https://api.thingspeak.com/channels/9/feeds.json?'
-    
+
+
+    api_url = 'https://thingspeak.mathworks.com/channels/357142/feeds.json?'
+
     try:
         response = requests.get(api_url)
         response.raise_for_status()  
