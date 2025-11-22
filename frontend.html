@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThingSpeak Data Viewer</title>
+    <title>ThingSpeak Temperature & Humidity</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -13,7 +13,7 @@
     </style>
 </head>
 <body>
-    <h1>ThingSpeak Latest Feeds</h1>
+    <h1>ThingSpeak Temperature & Humidity</h1>
     <button id="loadData">Load Data</button>
     <div id="chart_div"></div>
     <table id="dataTable">
@@ -21,15 +21,17 @@
             <tr>
                 <th>Entry ID</th>
                 <th>Created At</th>
-                <th>Field 1</th>
-                <th>Field 2</th>
+                <th>Temperature [°C]</th>
+                <th>Humidity [%]</th>
             </tr>
         </thead>
         <tbody>
+            <!-- Data will be inserted here -->
         </tbody>
     </table>
 
     <script>
+        // Load Google Charts
         google.charts.load('current', {packages: ['corechart']});
 
         async function loadData() {
@@ -38,7 +40,10 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-
+                
+                // -----------------------
+                // Populate Table
+                // -----------------------
                 const tableBody = document.querySelector('#dataTable tbody');
                 tableBody.innerHTML = '';
                 data.feeds.forEach(feed => {
@@ -46,23 +51,26 @@
                     row.innerHTML = `
                         <td>${feed.entry_id}</td>
                         <td>${feed.created_at}</td>
-                        <td>${feed.field1 || ''}</td>
-                        <td>${feed.field2 || ''}</td>
+                        <td>${feed.field3 || ''}</td>
+                        <td>${feed.field5 || ''}</td>
                     `;
                     tableBody.appendChild(row);
                 });
 
-                const chartData = [['Time', 'Field 1', 'Field 2']];
+                // -----------------------
+                // Prepare Google Chart
+                // -----------------------
+                const chartData = [['Time', 'Temperature [°C]', 'Humidity [%]']];
                 data.feeds.forEach(feed => {
                     const time = new Date(feed.created_at);
-                    const field1 = feed.field1 ? parseFloat(feed.field1) : 0;
-                    const field2 = feed.field2 ? parseFloat(feed.field2) : 0;
-                    chartData.push([time, field1, field2]);
+                    const temperature = feed.field3 ? parseFloat(feed.field3) : 0;
+                    const humidity = feed.field5 ? parseFloat(feed.field5) : 0;
+                    chartData.push([time, temperature, humidity]);
                 });
 
                 const dataTable = google.visualization.arrayToDataTable(chartData);
                 const options = {
-                    title: 'ThingSpeak Latest Feeds',
+                    title: 'Temperature & Humidity Over Time',
                     curveType: 'function',
                     legend: { position: 'bottom' },
                     hAxis: { title: 'Time', format: 'HH:mm:ss' },
