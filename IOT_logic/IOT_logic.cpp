@@ -5,27 +5,30 @@
 #include <DHT.h>
 
 
-// ---- WiFi Settings ----
-const char* ssid = "DIGI-H6fH";
-const char* password = "U5GP6uqEM7";
+const char* ssid = "numeWifi";
+const char* password = "parolaWifi";
+const char* mqtt_server = "192.168.1.132";  
 
-// ---- MQTT Broker ----
-const char* mqtt_server = "192.168.1.132";
-
-// ---- DHT Sensor ----
 #define DHTPIN 5
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
-// MQTT client objects
+#define LED_ROSU   13  // D7 = GPIO13
+#define LED_VERDE  16  // D0 = GPIO16
+#define LED_GALBEN 4   // D2 = GPIO4
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// Timer
 unsigned long lastPublish = 0;
 const long interval = 2000; 
 
-// ---- WiFi Connection ----
+void setLeds(bool verde, bool galben, bool rosu) {
+  digitalWrite(LED_VERDE,  verde  ? HIGH : LOW);
+  digitalWrite(LED_GALBEN, galben ? HIGH : LOW);
+  digitalWrite(LED_ROSU,   rosu   ? HIGH : LOW);
+}
+
 void setup_wifi() {
   delay(10);
   Serial.println();
@@ -43,7 +46,6 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-// ---- Reconnect to MQTT if needed ----
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -62,18 +64,19 @@ void setup() {
   Serial.begin(115200);
   dht.begin();
 
-  setup_wifi();
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_GALBEN, OUTPUT);
+  pinMode(LED_ROSU, OUTPUT);
+  setLeds(false, false, false);
 
+  setup_wifi();
   client.setServer(mqtt_server, 1883);
 
   Serial.println("System started...");
 }
 
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-
+  if (!client.connected()) reconnect();
   client.loop();
 
   unsigned long now = millis();
@@ -81,23 +84,34 @@ void loop() {
     lastPublish = now;
 
     float temp = dht.readTemperature();
-    float hum = dht.readHumidity();
+    float hum  = dht.readHumidity();
 
     if (isnan(temp) || isnan(hum)) {
       Serial.println("Failed to read from DHT sensor!");
+      setLeds(false, true, false);
       return;
     }
 
-    // ---- Print locally ----
+    // Ideal: 21..23 => GREEN
+    // Above 23 => RED
+    // Below 21 => YELLOW
+    if (temp < 21.0) {
+      setLeds(false, true, false);   
+    } else if (temp <= 23.0) {
+      setLeds(true, false, false);  
+    } else {
+      setLeds(false, false, true); 
+    }
+
     Serial.print("Temperature: ");
     Serial.print(temp);
     Serial.print(" °C | Humidity: ");
     Serial.print(hum);
     Serial.println(" %");
 
-    // ---- Publish to MQTT ----
-    char payload[50];
-    sprintf(payload, "{\"temperature\": %.2f, \"humidity\": %.2f}", temp, hum);
+    char payload[80];
+    snprintf(payload, sizeof(payload),
+             "{\"temperature\": %.2f, \"humidity\": %.2f}", temp, hum);
     client.publish("arduino/dht11", payload);
 
     Serial.print("MQTT Published: ");
