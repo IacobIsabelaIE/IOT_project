@@ -2,88 +2,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IoT Dashboard – ThingSpeak & MQTT</title>
+    <title>IoT Monitoring Dashboard</title>
 
-    <!-- Google Charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
     <style>
-        :root {
-            --primary: #4caf50;
-            --primary-dark: #3d8b40;
-            --bg: #f4f6f9;
-            --text-main: #333;
-            --text-light: #666;
-            --card-bg: white;
-            --shadow: 0 3px 8px rgba(0,0,0,0.12);
-            --radius: 10px;
-        }
-
         body {
-            font-family: "Segoe UI", sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            background: var(--bg);
+            background-color: #f2f2f2;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: auto;
             padding: 20px;
         }
 
         h1 {
             text-align: center;
-            color: var(--text-main);
-            margin-bottom: 25px;
-            letter-spacing: 1px;
+            margin-bottom: 30px;
+            color: #222;
         }
 
         .buttons {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         button {
-            background: var(--primary);
+            background-color: #2f6fed;
             border: none;
-            padding: 12px 26px;
+            padding: 10px 20px;
             color: white;
-            border-radius: var(--radius);
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
-            margin: 0 8px;
-            transition: 0.25s;
-            box-shadow: var(--shadow);
+            border-radius: 4px;
+            margin: 0 6px;
         }
 
         button:hover {
-            background: var(--primary-dark);
+            background-color: #2456b8;
         }
 
         .section {
-            background: var(--card-bg);
+            background-color: white;
             padding: 20px;
             margin-bottom: 25px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
 
         h2 {
-            border-left: 5px solid var(--primary);
-            padding-left: 10px;
-            color: var(--text-main);
             margin-bottom: 20px;
+            color: #333;
         }
 
-        /* Current Data Grid */
         .current-data {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
-            background: #e8f5e9;
+            background-color: #eef3ff;
             padding: 15px;
-            border-radius: var(--radius);
+            border-radius: 4px;
         }
 
         .data-item {
@@ -91,249 +73,252 @@
         }
 
         .data-value {
-            font-size: 34px;
+            font-size: 30px;
             font-weight: bold;
-            color: var(--primary-dark);
+            color: #2f6fed;
         }
 
         .data-label {
-            color: var(--text-light);
+            color: #555;
+            margin-top: 5px;
         }
 
-        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
+            margin-top: 20px;
         }
 
         th {
-            background: var(--primary);
+            background-color: #2f6fed;
             color: white;
             padding: 10px;
+            font-weight: normal;
         }
 
         td {
             padding: 10px;
-            background: white;
+            text-align: center;
+            background-color: white;
+            border-bottom: 1px solid #ddd;
         }
 
         tr:nth-child(even) td {
-            background: #f9f9f9;
+            background-color: #f7f7f7;
         }
 
         .chart-container {
             width: 100%;
-            height: 380px;
-            margin: 15px 0;
+            height: 350px;
+            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
-        <h1>🌐 IoT Monitoring Dashboard</h1>
+<div class="container">
+    <h1>IoT Monitoring Dashboard</h1>
 
-        <div class="buttons">
-            <button id="loadThingSpeak">Refresh ThingSpeak</button>
-            <button id="loadMQTT">Refresh MQTT</button>
-            <button id="loadBoth">Refresh Both</button>
-        </div>
-
-        <!-- MQTT Section -->
-        <div class="section">
-            <h2>🌡️ Arduino DHT11 Sensor (MQTT)</h2>
-
-            <div class="current-data">
-                <div class="data-item">
-                    <div class="data-value" id="currentTemp">--</div>
-                    <div class="data-label">Temperature °C</div>
-                </div>
-
-                <div class="data-item">
-                    <div class="data-value" id="currentHumidity">--</div>
-                    <div class="data-label">Humidity %</div>
-                </div>
-
-                <div class="data-item">
-                    <div class="data-label">Last Update</div>
-                    <div style="margin-top:8px; color:var(--text-main)" id="lastUpdate">--</div>
-                </div>
-            </div>
-
-            <div id="mqtt_chart" class="chart-container"></div>
-
-            <table id="mqttTable">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Temp (°C)</th>
-                        <th>Humidity (%)</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- ThingSpeak Section -->
-        <div class="section">
-            <h2>📊 ThingSpeak Data</h2>
-
-            <div id="thingspeak_chart" class="chart-container"></div>
-
-            <table id="thingspeakTable">
-                <thead>
-                    <tr>
-                        <th>Entry ID</th>
-                        <th>Created At</th>
-                        <th>Field 1</th>
-                        <th>Field 2</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+    <div class="buttons">
+       
     </div>
 
-    <script>
-        google.charts.load("current", { packages: ["corechart"] });
 
-        let mqttHistoricalData = [];
+    <div class="section">
+        <h2>Arduino DHT11 Sensor (MQTT)</h2>
 
-        /* ---------------- MQTT DATA ---------------- */
-        async function loadMQTTData() {
-            try {
-                const response = await fetch("http://127.0.0.1:5000/mqtt-data");
-                const data = await response.json();
+        <div class="current-data">
+            <div class="data-item">
+                <div class="data-value" id="currentTemp">--</div>
+                <div class="data-label">Temperature (°C)</div>
+            </div>
 
-                document.getElementById("currentTemp").textContent =
-                    parseFloat(data.temperature).toFixed(1);
+            <div class="data-item">
+                <div class="data-value" id="currentHumidity">--</div>
+                <div class="data-label">Humidity (%)</div>
+            </div>
 
-                document.getElementById("currentHumidity").textContent =
-                    parseFloat(data.humidity).toFixed(1);
+            <div class="data-item">
+                <div class="data-label">Last Update</div>
+                <div id="lastUpdate">--</div>
+            </div>
+        </div>
 
-                document.getElementById("lastUpdate").textContent =
-                    new Date().toLocaleString();
+        <div id="mqtt_chart" class="chart-container"></div>
 
-                mqttHistoricalData.push({
-                    timestamp: new Date(),
-                    temperature: parseFloat(data.temperature) || 0,
-                    humidity: parseFloat(data.humidity) || 0
-                });
+        <table id="mqttTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-                if (mqttHistoricalData.length > 20) mqttHistoricalData.shift();
+    <div class="section">
+        <h2>ThingSpeak Data</h2>
 
-                updateMQTTTable();
-                updateMQTTChart();
+        <div id="thingspeak_chart" class="chart-container"></div>
 
-            } catch (err) {
-                console.log("MQTT error:", err);
+        <table id="thingspeakTable">
+            <thead>
+                <tr>
+                    <th>Entry ID</th>
+                    <th>Created At</th>
+                    <th>Particular Matter 2.5 (Pollution)</th>
+                    <th>Particular Matter 10 (Dust)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    google.charts.load("current", { packages: ["corechart"] });
+
+    let mqttHistoricalData = [];
+
+    async function loadMQTTData() {
+        try {
+            const response = await fetch("http://127.0.0.1:5000/mqtt-data");
+            const data = await response.json();
+
+            document.getElementById("currentTemp").textContent =
+            data.temperature !== undefined ? parseFloat(data.temperature).toFixed(1) : "--";
+
+            document.getElementById("currentHumidity").textContent =
+            data.humidity !== undefined ? parseFloat(data.humidity).toFixed(1) : "--";
+
+            document.getElementById("lastUpdate").textContent =
+                new Date().toLocaleString();
+
+            mqttHistoricalData.push({
+                timestamp: new Date(),
+                temperature: parseFloat(data.temperature),
+                humidity: parseFloat(data.humidity)
+            });
+
+            if (mqttHistoricalData.length > 20) {
+                mqttHistoricalData.shift();
             }
+
+            updateMQTTTable();
+            updateMQTTChart();
+        } catch (e) {
+            console.log(e);
         }
+    }
 
-        function updateMQTTTable() {
-            const tbody = document.querySelector("#mqttTable tbody");
-            tbody.innerHTML = "";
+    function updateMQTTTable() {
+        const tbody = document.querySelector("#mqttTable tbody");
+        tbody.innerHTML = "";
 
-            mqttHistoricalData.slice().reverse().forEach(r => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${r.timestamp.toLocaleString()}</td>
-                        <td>${r.temperature.toFixed(1)}</td>
-                        <td>${r.humidity.toFixed(1)}</td>
-                    </tr>
-                `;
-            });
-        }
+        mqttHistoricalData.slice().reverse().forEach(r => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${r.timestamp.toLocaleString()}</td>
+                    <td>${r.temperature.toFixed(1)}</td>
+                    <td>${r.humidity.toFixed(1)}</td>
+                </tr>
+            `;
+        });
+    }
 
-        function updateMQTTChart() {
-            if (!mqttHistoricalData.length) return;
+    function updateMQTTChart() {
+        if (!mqttHistoricalData.length) return;
 
-            const rows = [["Time", "Temperature", "Humidity"]];
-            mqttHistoricalData.forEach(r => {
-                rows.push([r.timestamp, r.temperature, r.humidity]);
-            });
+        const rows = [["Time", "Temperature", "Humidity"]];
+        mqttHistoricalData.forEach(r => {
+            rows.push([r.timestamp, r.temperature, r.humidity]);
+        });
 
-            const data = google.visualization.arrayToDataTable(rows);
-            const options = {
-                title: "MQTT Sensor Data",
-                legend: { position: "bottom" },
-                curveType: "function"
-            };
+        const data = google.visualization.arrayToDataTable(rows);
+        new google.visualization.LineChart(
+            document.getElementById("mqtt_chart")
+        ).draw(data, {
+            title: "MQTT Sensor Data",
+            legend: { position: "bottom" }
+        });
+    }
 
-            new google.visualization.LineChart(
-                document.getElementById("mqtt_chart")
-            ).draw(data, options);
-        }
+   async function loadThingSpeakData() {
+    try {
+        const response = await fetch("http://127.0.0.1:5000/fetch-data");
+        const data = await response.json();
 
-        /* ---------------- THINGSPEAK DATA ---------------- */
-        async function loadThingSpeakData() {
-            try {
-                const response = await fetch("http://127.0.0.1:5000/fetch-data");
-                const data = await response.json();
+        const tbody = document.querySelector("#thingspeakTable tbody");
+        tbody.innerHTML = "";
 
-                const tbody = document.querySelector("#thingspeakTable tbody");
-                tbody.innerHTML = "";
+        const chartData = [
+            ["Time", "Particulate Matter 2.5 (Pollution)", "Particulate Matter 10 (Dust)"]
+        ];
 
-                const chartData = [["Time", "Field 1", "Field 2"]];
+       data.feeds.forEach(f => {
+    
+    const utcDate = new Date(f.created_at);
+    
+    const options = {
+        timeZone: 'Europe/Bucharest',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    };
+    const formattedDate = utcDate.toLocaleString('ro-RO', options);
 
-                data.feeds.forEach(f => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${f.entry_id}</td>
-                            <td>${f.created_at}</td>
-                            <td>${f.field1 || ""}</td>
-                            <td>${f.field2 || ""}</td>
-                        </tr>
-                    `;
+    tbody.innerHTML += `
+        <tr>
+            <td>${f.entry_id}</td>
+            <td>${formattedDate}</td>
+            <td>${f.field1 || ""}</td>
+            <td>${f.field2 || ""}</td>
+        </tr>
+    `;
 
-                    chartData.push([
-                        new Date(f.created_at),
-                        parseFloat(f.field1) || 0,
-                        parseFloat(f.field2) || 0
-                    ]);
-                });
+    chartData.push([
+        utcDate,
+        parseFloat(f.field1) || 0,
+        parseFloat(f.field2) || 0
+    ]);
+});
 
-                const table = google.visualization.arrayToDataTable(chartData);
-                new google.visualization.LineChart(
-                    document.getElementById("thingspeak_chart")
-                ).draw(table, {
-                    title: "ThingSpeak Latest Feeds",
-                    legend: { position: "bottom" }
-                });
+        const table = google.visualization.arrayToDataTable(chartData);
+        new google.visualization.LineChart(
+            document.getElementById("thingspeak_chart")
+        ).draw(table, {
+            title: "Air Quality Measurements",
+            legend: { position: "bottom" }
+        });
+    } catch (e) {
+        console.log(e);
+    }
+}
 
-            } catch (err) {
-                console.log("ThingSpeak error:", err);
-            }
-        }
+    //document.getElementById("loadMQTT").onclick = () =>
+        //google.charts.setOnLoadCallback(loadMQTTData);
 
-        /* -------- Buttons -------- */
-        document.getElementById("loadMQTT").onclick = () =>
-            google.charts.setOnLoadCallback(loadMQTTData);
+    //document.getElementById("loadThingSpeak").onclick = () =>
+        //google.charts.setOnLoadCallback(loadThingSpeakData);
 
-        document.getElementById("loadThingSpeak").onclick = () =>
-            google.charts.setOnLoadCallback(loadThingSpeakData);
+    //document.getElementById("loadBoth").onclick = () =>
+        //google.charts.setOnLoadCallback(() => {
+            //loadMQTTData();
+            //loadThingSpeakData();
+        //});
 
-        document.getElementById("loadBoth").onclick = () =>
-            google.charts.setOnLoadCallback(() => {
-                loadMQTTData();
-                loadThingSpeakData();
-            });
-
-        /* Auto-refresh */
-        setInterval(() => google.charts.setOnLoadCallback(loadMQTTData), 5000);
-        setInterval(() => google.charts.setOnLoadCallback(loadThingSpeakData), 15000);
-
-        window.onload = () =>
-            google.charts.setOnLoadCallback(() => {
-                loadMQTTData();
-                loadThingSpeakData();
-            });
-    </script>
+    window.onload = () =>
+    google.charts.setOnLoadCallback(() => {
+        loadMQTTData();
+        loadThingSpeakData();
+    });
+</script>
 
 </body>
 </html>
