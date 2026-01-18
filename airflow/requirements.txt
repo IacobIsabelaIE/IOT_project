@@ -1,0 +1,2 @@
+paho-mqtt>=2.1.0
+apache-airflow-providers-openai>=1.7.2
