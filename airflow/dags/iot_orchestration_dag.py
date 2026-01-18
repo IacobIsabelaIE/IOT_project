@@ -155,8 +155,7 @@ def combine_and_store_data(**context):
 # DAG definition
 # ---------------------------
 with DAG(
-    dag_id='iot_data_orchestration',
-    # schedule='*/5 * * * *',  # every 5 minutes
+    dag_id='iot_data_orchestration',~
 ) as dag:
 
     t1 = PythonOperator(
