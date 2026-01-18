@@ -155,7 +155,7 @@ def combine_and_store_data(**context):
 # DAG definition
 # ---------------------------
 with DAG(
-    dag_id='iot_data_orchestration',~
+    dag_id='iot_data_orchestration',
 ) as dag:
 
     t1 = PythonOperator(
