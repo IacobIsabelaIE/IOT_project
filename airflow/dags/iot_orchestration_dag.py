@@ -1,6 +1,6 @@
 from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook # type: ignore
 import requests
 import json
 from openai import OpenAI
@@ -184,4 +184,4 @@ with DAG(
         python_callable=combine_and_store_data
     )
 
-    [t1, t2] >> t3 >> t4 >> t5
+    [t1, t2] >> t3 >> t4 >> t5 # type: ignore
