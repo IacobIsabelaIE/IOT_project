@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -120,11 +121,6 @@
 <div class="container">
     <h1>IoT Monitoring Dashboard</h1>
 
-    <div class="buttons">
-       
-    </div>
-
-
     <div class="section">
         <h2>Arduino DHT11 Sensor (MQTT)</h2>
 
@@ -169,8 +165,8 @@
                 <tr>
                     <th>Entry ID</th>
                     <th>Created At</th>
-                    <th>Particular Matter 2.5 (Pollution)</th>
-                    <th>Particular Matter 10 (Dust)</th>
+                    <th>Temperature</th> 
+                    <th>Humidity</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -189,13 +185,12 @@
             const data = await response.json();
 
             document.getElementById("currentTemp").textContent =
-            data.temperature !== undefined ? parseFloat(data.temperature).toFixed(1) : "--";
+                data.temperature !== undefined ? parseFloat(data.temperature).toFixed(1) : "--";
 
             document.getElementById("currentHumidity").textContent =
-            data.humidity !== undefined ? parseFloat(data.humidity).toFixed(1) : "--";
+                data.humidity !== undefined ? parseFloat(data.humidity).toFixed(1) : "--";
 
-            document.getElementById("lastUpdate").textContent =
-                new Date().toLocaleString();
+            document.getElementById("lastUpdate").textContent = new Date().toLocaleString();
 
             mqttHistoricalData.push({
                 timestamp: new Date(),
@@ -241,83 +236,81 @@
         new google.visualization.LineChart(
             document.getElementById("mqtt_chart")
         ).draw(data, {
-            title: "MQTT Sensor Data",
+            title: "",
             legend: { position: "bottom" }
         });
     }
 
-   async function loadThingSpeakData() {
-    try {
-        const response = await fetch("http://127.0.0.1:5000/fetch-data");
-        const data = await response.json();
+    async function loadThingSpeakData() {
+        try {
+            const response = await fetch("http://127.0.0.1:5000/fetch-data");
+            const data = await response.json();
 
-        const tbody = document.querySelector("#thingspeakTable tbody");
-        tbody.innerHTML = "";
+            const tbody = document.querySelector("#thingspeakTable tbody");
+            tbody.innerHTML = "";
 
-        const chartData = [
-            ["Time", "Particulate Matter 2.5 (Pollution)", "Particulate Matter 10 (Dust)"]
-        ];
+            const chartData = [
+                ["Time", "Temperature", "Humidity"]
+            ];
 
-       data.feeds.forEach(f => {
-    
-    const utcDate = new Date(f.created_at);
-    
-    const options = {
-        timeZone: 'Europe/Bucharest',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    };
-    const formattedDate = utcDate.toLocaleString('ro-RO', options);
+            data.feeds.forEach(f => {
+                const utcDate = new Date(f.created_at);
 
-    tbody.innerHTML += `
-        <tr>
-            <td>${f.entry_id}</td>
-            <td>${formattedDate}</td>
-            <td>${f.field1 || ""}</td>
-            <td>${f.field2 || ""}</td>
-        </tr>
-    `;
+                const options = {
+                    timeZone: 'Europe/Bucharest',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                };
 
-    chartData.push([
-        utcDate,
-        parseFloat(f.field1) || 0,
-        parseFloat(f.field2) || 0
-    ]);
-});
+                const formattedDate = utcDate.toLocaleString('ro-RO', options);
 
-        const table = google.visualization.arrayToDataTable(chartData);
-        new google.visualization.LineChart(
-            document.getElementById("thingspeak_chart")
-        ).draw(table, {
-            title: "Air Quality Measurements",
-            legend: { position: "bottom" }
-        });
-    } catch (e) {
-        console.log(e);
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${f.entry_id}</td>
+                        <td>${formattedDate}</td>
+                        <td>
+                            ${f.field3 !== null && f.field3 !== ""
+                            ? `${parseFloat(f.field3).toFixed(1)} °C`
+                            : "--"}
+                        </td>
+                        <td>
+                            ${f.field5 !== null && f.field5 !== ""
+                            ? `${parseFloat(f.field5).toFixed(1)} %`
+                            : "--"}
+                        </td>
+
+                    </tr>
+                `;
+
+                chartData.push([
+                    utcDate,
+                    parseFloat(f.field3) || 0,
+                    parseFloat(f.field5) || 0
+                ]);
+            });
+
+            const table = google.visualization.arrayToDataTable(chartData);
+            new google.visualization.LineChart(
+                document.getElementById("thingspeak_chart")
+            ).draw(table, {
+                title: "",
+                legend: { position: "bottom" }
+            });
+
+        } catch (e) {
+            console.log(e);
+        }
     }
-}
-
-    //document.getElementById("loadMQTT").onclick = () =>
-        //google.charts.setOnLoadCallback(loadMQTTData);
-
-    //document.getElementById("loadThingSpeak").onclick = () =>
-        //google.charts.setOnLoadCallback(loadThingSpeakData);
-
-    //document.getElementById("loadBoth").onclick = () =>
-        //google.charts.setOnLoadCallback(() => {
-            //loadMQTTData();
-            //loadThingSpeakData();
-        //});
 
     window.onload = () =>
-    google.charts.setOnLoadCallback(() => {
-        loadMQTTData();
-        loadThingSpeakData();
-    });
+        google.charts.setOnLoadCallback(() => {
+            loadMQTTData();
+            loadThingSpeakData();
+        });
 </script>
 
 </body>
